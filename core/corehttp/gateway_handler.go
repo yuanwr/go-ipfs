@@ -46,15 +46,6 @@ func newGatewayHandler(api coreiface.CoreAPI, conf GatewayConfig) *gatewayHandle
 	return i
 }
 
-// TODO(cryptix):  find these helpers somewhere else
-func (i *gatewayHandler) newDagFromReader(r io.Reader) (*dag.Node, error) {
-	// TODO(cryptix): change and remove this helper once PR1136 is merged
-	// return ufs.AddFromReader(i.api.IpfsNode(), r.Body)
-	return importer.BuildDagFromReader(
-		i.api.IpfsNode().DAG,
-		chunk.DefaultSplitter(r))
-}
-
 // TODO(btc): break this apart into separate handlers using a more expressive muxer
 func (i *gatewayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -154,7 +145,7 @@ func (i *gatewayHandler) getOrHeadHandler(w http.ResponseWriter, r *http.Request
 		ipnsHostname = true
 	}
 
-	dr, err := i.api.Cat(urlPath)
+	dr, err := i.api.Cat(path.Path(urlPath))
 	dir := false
 	if err == coreiface.ErrOffline {
 		w.WriteHeader(http.StatusServiceUnavailable)
@@ -215,7 +206,7 @@ func (i *gatewayHandler) getOrHeadHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	links, err := i.api.Ls(urlPath)
+	links, err := i.api.Ls(path.Path(urlPath))
 	if err != nil {
 		internalWebError(w, err)
 		return
@@ -226,7 +217,7 @@ func (i *gatewayHandler) getOrHeadHandler(w http.ResponseWriter, r *http.Request
 	// loop through files
 	foundIndex := false
 	for _, link := range links {
-		if link.Name == "index.html" {
+		if link.Name() == "index.html" {
 			log.Debugf("found index.html link for %s", urlPath)
 			foundIndex = true
 
@@ -238,7 +229,7 @@ func (i *gatewayHandler) getOrHeadHandler(w http.ResponseWriter, r *http.Request
 			}
 
 			// return index page instead.
-			ir, err := i.api.Cat(urlPath + "/index.html")
+			ir, err := i.api.Cat(path.Path(urlPath + "/index.html"))
 			if err != nil {
 				internalWebError(w, err)
 				return
@@ -251,8 +242,11 @@ func (i *gatewayHandler) getOrHeadHandler(w http.ResponseWriter, r *http.Request
 		}
 
 		// See comment above where originalUrlPath is declared.
-		di := directoryItem{humanize.Bytes(link.Size), link.Name, gopath.Join(originalUrlPath, link.Name)}
-		dirListing = append(dirListing, di)
+		dirListing = append(dirListing, directoryItem{
+			humanize.Bytes(link.Size()),
+			link.Name(),
+			gopath.Join(originalUrlPath, link.Name()),
+		})
 	}
 
 	if !foundIndex {
@@ -304,22 +298,24 @@ func (i *gatewayHandler) getOrHeadHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (i *gatewayHandler) postHandler(w http.ResponseWriter, r *http.Request) {
-	nd, err := i.newDagFromReader(r.Body)
-	if err != nil {
-		internalWebError(w, err)
-		return
-	}
+// TODO(cryptix):  find these helpers somewhere else
+func (i *gatewayHandler) newDagFromReader(r io.Reader) (*dag.Node, error) {
+	// TODO(cryptix): change and remove this helper once PR1136 is merged
+	// return ufs.AddFromReader(i.api.IpfsNode(), r.Body)
+	return importer.BuildDagFromReader(
+		i.api.IpfsNode().DAG,
+		chunk.DefaultSplitter(r))
+}
 
-	k, err := i.api.IpfsNode().DAG.Add(nd)
+func (i *gatewayHandler) postHandler(w http.ResponseWriter, r *http.Request) {
+	p, err := i.api.Add(r.Body)
 	if err != nil {
 		internalWebError(w, err)
-		return
 	}
 
 	i.addUserHeaders(w) // ok, _now_ write user's headers.
-	w.Header().Set("IPFS-Hash", k.String())
-	http.Redirect(w, r, ipfsPathPrefix+k.String(), http.StatusCreated)
+	w.Header().Set("X-IPFS-Path", p.String())
+	http.Redirect(w, r, ipfsPathPrefix+p.String(), http.StatusCreated)
 }
 
 func (i *gatewayHandler) putHandler(w http.ResponseWriter, r *http.Request) {

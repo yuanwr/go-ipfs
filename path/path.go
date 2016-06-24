@@ -45,6 +45,7 @@ func (p Path) String() string {
 }
 
 // IsJustAKey returns true if the path is of the form <key> or /ipfs/<key>.
+// TODO: this relies on using ParsePath() for instantiating
 func (p Path) IsJustAKey() bool {
 	parts := p.Segments()
 	return (len(parts) == 2 && parts[0] == "ipfs")
