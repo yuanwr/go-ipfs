@@ -20,10 +20,10 @@ var ObjectDiffCmd = &cmds.Command{
 		Tagline: "Takes a diff of the two given objects.",
 		ShortDescription: `
 'ipfs object diff' is a command used to show the differences between
-two ipfs objects.`,
+two IPFS objects.`,
 		LongDescription: `
 'ipfs object diff' is a command used to show the differences between
-two ipfs objects.
+two IPFS objects.
 
 Example:
 

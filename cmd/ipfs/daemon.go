@@ -48,9 +48,9 @@ const (
 
 var daemonCmd = &cmds.Command{
 	Helptext: cmds.HelpText{
-		Tagline: "Run a network-connected IPFS node.",
+		Tagline: "Run a network-connected ipfs node.",
 		ShortDescription: `
-'ipfs daemon' runs a persistent IPFS daemon that can serve commands
+'ipfs daemon' runs a persistent ipfs daemon that can serve commands
 over the network. Most applications that use IPFS will do so by
 communicating with a daemon over the HTTP API. While the daemon is
 running, calls to 'ipfs' commands will be sent over the network to
@@ -81,7 +81,7 @@ make sure to protect the port as you would other services or database
 
 HTTP Headers
 
-IPFS supports passing arbitrary headers to the API and Gateway. You can
+ipfs supports passing arbitrary headers to the API and Gateway. You can
 do this by setting headers on the API.HTTPHeaders and Gateway.HTTPHeaders
 keys:
 
@@ -117,7 +117,7 @@ environment variable:
 
 DEPRECATION NOTICE
 
-Previously, IPFS used an environment variable as seen below:
+Previously, ipfs used an environment variable as seen below:
 
    export API_ORIGIN="http://localhost:8888/"
 
@@ -128,11 +128,11 @@ Headers.
 	},
 
 	Options: []cmds.Option{
-		cmds.BoolOption(initOptionKwd, "Initialize IPFS with default settings if not already initialized").Default(false),
+		cmds.BoolOption(initOptionKwd, "Initialize ipfs with default settings if not already initialized").Default(false),
 		cmds.StringOption(routingOptionKwd, "Overrides the routing option").Default("dht"),
-		cmds.BoolOption(mountKwd, "Mounts IPFS to the filesystem").Default(false),
+		cmds.BoolOption(mountKwd, "Mounts ipfs to the filesystem").Default(false),
 		cmds.BoolOption(writableKwd, "Enable writing objects (with POST, PUT and DELETE)").Default(false),
-		cmds.StringOption(ipfsMountKwd, "Path to the mountpoint for IPFS (if using --mount). Defaults to config setting."),
+		cmds.StringOption(ipfsMountKwd, "Path to the mountpoint for ipfs (if using --mount). Defaults to config setting."),
 		cmds.StringOption(ipnsMountKwd, "Path to the mountpoint for IPNS (if using --mount). Defaults to config setting."),
 		cmds.BoolOption(unrestrictedApiAccessKwd, "This option has no effect since v0.4.3").Default(false),
 		cmds.BoolOption(unencryptTransportKwd, "Disable transport encryption (for debugging protocols)").Default(false),
@@ -200,7 +200,7 @@ func daemonFunc(req cmds.Request, res cmds.Response) {
 
 	if initialize {
 
-		// now, FileExists is our best method of detecting whether IPFS is
+		// now, FileExists is our best method of detecting whether ipfs is
 		// configured. Consider moving this into a config helper method
 		// `IsInitialized` where the quality of the signal can be improved over
 		// time, and many call-sites can benefit.
