@@ -66,6 +66,13 @@ ipfs uses a repository in the local file system. By default, the repo is located
 at ~/.ipfs. To change the repo location, set the $IPFS_PATH environment variable:
 
   export IPFS_PATH=/path/to/ipfsrepo
+
+Error Codes
+
+The CLI will return a message and a code if it is accessed incorrectly. Code 1
+signifies that the CLI should return an exit code of 1 (and similarly 0 for
+code 0). On POSIX systems, the standard convention is to pass '0' for a 
+successful execution, and '1' for a failed executions; ipfs follows this.
 `,
 	},
 	Options: []cmds.Option{
