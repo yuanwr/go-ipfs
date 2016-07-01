@@ -41,7 +41,7 @@ type ipnsPublisher struct {
 	ds      ds.Datastore
 }
 
-// NewRoutingPublisher constructs a publisher for the IPFS Routing name system.
+// NewRoutingPublisher constructs a publisher for the IPFS routing name system.
 func NewRoutingPublisher(route routing.IpfsRouting, ds ds.Datastore) *ipnsPublisher {
 	if ds == nil {
 		panic("nil datastore")

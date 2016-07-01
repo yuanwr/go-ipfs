@@ -52,7 +52,7 @@ func Resolve(ctx context.Context, n *IpfsNode, p path.Path) (*merkledag.Node, er
 		}
 	}
 
-	// ok, we have an ipfs path now (or what we'll treat as one)
+	// ok, we have an IPFS path now (or what we'll treat as one)
 	return n.Resolver.ResolvePath(ctx, p)
 }
 
