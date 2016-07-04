@@ -13,6 +13,7 @@ import (
 
 	dag "github.com/ipfs/go-ipfs/merkledag"
 	ft "github.com/ipfs/go-ipfs/unixfs"
+	uio "github.com/ipfs/go-ipfs/unixfs/io"
 	ufspb "github.com/ipfs/go-ipfs/unixfs/pb"
 )
 
@@ -28,25 +29,31 @@ type Directory struct {
 	files     map[string]*File
 
 	lock sync.Mutex
-	node *dag.Node
 	ctx  context.Context
+
+	dirbuilder *uio.DirectoryBuilder
 
 	modTime time.Time
 
 	name string
 }
 
-func NewDirectory(ctx context.Context, name string, node *dag.Node, parent childCloser, dserv dag.DAGService) *Directory {
-	return &Directory{
-		dserv:     dserv,
-		ctx:       ctx,
-		name:      name,
-		node:      node,
-		parent:    parent,
-		childDirs: make(map[string]*Directory),
-		files:     make(map[string]*File),
-		modTime:   time.Now(),
+func NewDirectory(ctx context.Context, name string, node *dag.Node, parent childCloser, dserv dag.DAGService) (*Directory, error) {
+	db, err := uio.NewDirectoryFromNode(dserv, node)
+	if err != nil {
+		return nil, err
 	}
+
+	return &Directory{
+		dserv:      dserv,
+		ctx:        ctx,
+		name:       name,
+		dirbuilder: db,
+		parent:     parent,
+		childDirs:  make(map[string]*Directory),
+		files:      make(map[string]*File),
+		modTime:    time.Now(),
+	}, nil
 }
 
 // closeChild updates the child by the given name to the dag node 'nd'
@@ -80,21 +87,16 @@ func (d *Directory) closeChildUpdate(name string, nd *dag.Node, sync bool) (*dag
 }
 
 func (d *Directory) flushCurrentNode() (*dag.Node, error) {
-	_, err := d.dserv.Add(d.node)
+	nd, err := d.dirbuilder.GetNode()
 	if err != nil {
 		return nil, err
 	}
 
-	return d.node.Copy(), nil
+	return nd.Copy(), nil
 }
 
 func (d *Directory) updateChild(name string, nd *dag.Node) error {
-	err := d.node.RemoveNodeLink(name)
-	if err != nil && err != dag.ErrNotFound {
-		return err
-	}
-
-	err = d.node.AddNodeLinkClean(name, nd)
+	err := d.dirbuilder.AddChild(d.ctx, name, nd)
 	if err != nil {
 		return err
 	}
@@ -128,7 +130,11 @@ func (d *Directory) cacheNode(name string, nd *dag.Node) (FSNode, error) {
 
 	switch i.GetType() {
 	case ufspb.Data_Directory:
-		ndir := NewDirectory(d.ctx, name, nd, d, d.dserv)
+		ndir, err := NewDirectory(d.ctx, name, nd, d, d.dserv)
+		if err != nil {
+			return nil, err
+		}
+
 		d.childDirs[name] = ndir
 		return ndir, nil
 	case ufspb.Data_File, ufspb.Data_Raw, ufspb.Data_Symlink:
@@ -281,7 +287,11 @@ func (d *Directory) Mkdir(name string) (*Directory, error) {
 		return nil, err
 	}
 
-	dirobj := NewDirectory(d.ctx, name, ndir, d, d.dserv)
+	dirobj, err := NewDirectory(d.ctx, name, ndir, d, d.dserv)
+	if err != nil {
+		return nil, err
+	}
+
 	d.childDirs[name] = dirobj
 	return dirobj, nil
 }
