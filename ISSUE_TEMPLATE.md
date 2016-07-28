@@ -14,5 +14,5 @@ Description:
 ---------------------------------------------------
 This is for you! Please read, and then delete this text before posting it.
 The go-ipfs issues are only for bug reports and directly actionable features.
-Check https://github.com/ipfs/community/blob/master/contributing.md#reporting-issues if that doesn't fit.
-Check https://github.com/ipfs/go-ipfs/blob/master/docs/github-issue-guide.md if you are not sure how to fill this issue.
+Read https://github.com/ipfs/community/blob/master/contributing.md#reporting-issues if your issue doesn't fit either of those categories.
+Read https://github.com/ipfs/go-ipfs/blob/master/docs/github-issue-guide.md if you are not sure how to fill in this issue.
