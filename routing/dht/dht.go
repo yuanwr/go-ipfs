@@ -12,7 +12,6 @@ import (
 	key "github.com/ipfs/go-ipfs/blocks/key"
 	routing "github.com/ipfs/go-ipfs/routing"
 	pb "github.com/ipfs/go-ipfs/routing/dht/pb"
-	providers "github.com/ipfs/go-ipfs/routing/dht/providers"
 	kb "github.com/ipfs/go-ipfs/routing/kbucket"
 	record "github.com/ipfs/go-ipfs/routing/record"
 
@@ -49,7 +48,7 @@ type IpfsDHT struct {
 	datastore ds.Datastore // Local data
 
 	routingTable *kb.RoutingTable // Array of routing tables for differently distanced nodes
-	providers    *providers.ProviderManager
+	providers    *ProviderManager
 
 	birth    time.Time  // When this peer started up
 	diaglock sync.Mutex // lock to make diagnostics work better
@@ -85,8 +84,8 @@ func NewDHT(ctx context.Context, h host.Host, dstore ds.Datastore) *IpfsDHT {
 	dht.ctx = ctx
 
 	h.SetStreamHandler(ProtocolDHT, dht.handleNewStream)
-	dht.providers = providers.NewProviderManager(dht.ctx, dht.self, dstore)
-	dht.proc.AddChild(dht.providers.Process())
+	dht.providers = NewProviderManager(dht.ctx, dht.self)
+	dht.proc.AddChild(dht.providers.proc)
 	goprocessctx.CloseAfterContext(dht.proc, ctx)
 
 	dht.routingTable = kb.NewRoutingTable(20, kb.ConvertPeerID(dht.self), time.Minute, dht.peerstore)
